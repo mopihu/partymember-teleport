@@ -8,6 +8,10 @@ A `tera-proxy` module that lets you teleport to your party members' locations. I
 - Toggles teleport requests on/off
 - Default is off
 
+## Requests
+If enabled, any party member can request you to be teleported to them, by typing one of the keywords in party chat:
+`help`, `come`, `jesus`
+
 ## Known issues
 - Does not work in certain zones
 
