@@ -1,16 +1,16 @@
 const Command = require('command')
 const Vec3 = require('tera-vec3')
+const config = require('./config.json')
 
 module.exports = function PartymemberTeleport(dispatch) {
   const command = Command(dispatch)
-  const keyWords = ['help', 'come', 'jesus']
 
+  let keyWords = config.keyWords.slice()
+  let instantTp = config.instantTp || false
   let villageList = null
-  let gameId = null
-  let partyMembers = []
   let teleportTo = null
-  let instantTp = false
-  let nextLocation = new Vec3
+  let partyMembers = []
+  let nextLocation = new Vec3()
 
   function getVillageId(zone) {
     for (let village in villageList) {
@@ -36,10 +36,6 @@ module.exports = function PartymemberTeleport(dispatch) {
     }, 800)
   }
 
-  dispatch.hook('S_LOGIN', 10, event => {
-    gameId = event.gameId
-  })
-
   dispatch.hook('S_VILLAGE_LIST_TO_TELEPORT', 1, event => {
     if (!villageList) {
       villageList = event.locations
@@ -48,6 +44,10 @@ module.exports = function PartymemberTeleport(dispatch) {
 
   dispatch.hook('S_PARTY_MEMBER_LIST', 7, event => {
     partyMembers = event.members
+  })
+
+  dispatch.hook('S_LEAVE_PARTY', 1, event => {
+    partyMembers = []
   })
 
   dispatch.hook('S_PARTY_MEMBER_INTERVAL_POS_UPDATE', 3, event => {
@@ -71,7 +71,7 @@ module.exports = function PartymemberTeleport(dispatch) {
               command.message(' Set teleport Request to: ' + event.authorName)
               teleportTo = event.authorName
             } else {
-              command.message(' Info: Detected teleport request, type "/8 tp toggle" to activate instant teleport requests')
+              command.message(' Info: Detected teleport request, type "/8 pmt toggle" to activate instant teleport requests')
             }
           }
         }
@@ -86,10 +86,10 @@ module.exports = function PartymemberTeleport(dispatch) {
     }
   })
 
-  dispatch.hook('S_SPAWN_ME', 2, event => {
+  dispatch.hook('S_SPAWN_ME', 3, event => {
     if (nextLocation.length() != 0) {
       event.loc = nextLocation
-      nextLocation = (0, 0, 0)
+      nextLocation = new Vec3()
       return true
     }
   })
@@ -112,5 +112,6 @@ module.exports = function PartymemberTeleport(dispatch) {
 
   this.destructor = function() {
     command.remove('pmt')
+    delete require.cache[require.resolve('./config.json')]
   }
 }
